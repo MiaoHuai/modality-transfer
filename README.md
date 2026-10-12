@@ -17,9 +17,10 @@
 5. [训练](#5-训练)
 6. [测试与推理](#6-测试与推理)
 7. [服务端 / 客户端](#7-服务端--客户端)
-8. [Docker](#8-docker)
-9. [注意事项](#9-注意事项)
-10. [致谢与上游](#10-致谢与上游)
+8. [可视化 Demo 网站](#8-可视化-demo-网站)
+9. [Docker](#9-docker)
+10. [注意事项](#10-注意事项)
+11. [致谢与上游](#11-致谢与上游)
 
 ---
 
@@ -34,6 +35,7 @@
 | **自定义推理** | `infer.py`：按目录批量读图，经生成器输出并保存 |
 | **HTTP 服务** | `server.py` + `run.py`：任务队列式异步推理（端口 `5001`） |
 | **示例客户端** | `client.py` / `client_result.py`：提交任务与查询结果 |
+| **可视化 Demo** | `demo/app.py`：中文网页，展示模式（无权重）+ 可选在线推理（端口 `7860`） |
 
 ### 1.2 本仓库侧重的模态迁移方向
 
@@ -64,6 +66,12 @@
 ├── Dockerfile                          # 基于 PyTorch 镜像，安装依赖后启动 server.py（暴露 5001）
 ├── .gitignore                          # 忽略 checkpoints/、*.pth、results/ 等
 ├── README.md                           # 本说明（仓库根目录）
+├── demo/                               # 可视化 Demo 网站（展示模式 + 可选在线推理）
+│   ├── app.py                          # Flask 入口，默认端口 7860
+│   ├── README.md                       # Demo 启动说明（中文）
+│   ├── requirements.txt                # flask / pillow
+│   ├── templates/ / static/            # 前端页面与样式
+│   └── ...
 └── pytorch-CycleGAN-and-pix2pix/       # 主代码（上游 + 本项目扩展）
     ├── train.py / test.py              # 通用训练 / 测试入口
     ├── train.sh / test.sh              # WHU-City opt2sar 的 pix2pix 示例命令
@@ -407,7 +415,29 @@ python client_result.py <task_id>
 
 ---
 
-## 8. Docker
+
+## 8. 可视化 Demo 网站
+
+仓库根目录 `demo/` 提供中文可视化页面，用于展示模态迁移效果：
+
+- **展示模式**（默认，无需 `.pth`）：浏览 `datasets/test/` 中光学/SAR 样例对照，支持拖拽对比滑块。
+- **在线推理**（可选）：当 `pytorch-CycleGAN-and-pix2pix/checkpoints/<实验名>/latest_net_G.pth` 存在时，可上传图片进行推理。
+
+启动：
+
+```bash
+cd demo
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python app.py
+# 浏览器打开 http://127.0.0.1:7860
+```
+
+详细说明见 [`demo/README.md`](demo/README.md)。该 Demo **独立于** `server.py`（端口 5001 的异步任务 API）。
+
+---
+
+## 9. Docker
 
 根目录 `Dockerfile` 概要：
 
@@ -433,7 +463,7 @@ docker run --gpus all -p 5001:5001 \
 
 ---
 
-## 9. 注意事项
+## 10. 注意事项
 
 1. **权重未入库**  
    根目录 `.gitignore` 忽略 `**/checkpoints/`、`**/*.pth`、`**/results/` 等。GitHub 对大文件也有限制；请用网盘、对象存储或 Git LFS（若你方策略允许）单独管理权重。
@@ -455,7 +485,7 @@ docker run --gpus all -p 5001:5001 \
 
 ---
 
-## 10. 致谢与上游
+## 11. 致谢与上游
 
 本仓库核心训练/测试框架来自：
 
@@ -476,4 +506,5 @@ docker run --gpus all -p 5001:5001 \
 - [ ] 已将 `latest_net_G.pth` 放到对应 `checkpoints/<实验名>/`  
 - [ ] 训练：`bash train.sh`（改路径与 GPU）  
 - [ ] 测试：`bash test.sh` 或 `python infer.py ...`  
-- [ ] （可选）服务：`python server.py`，再用 `client.py` 调用  
+- [ ] （可选）服务：`python server.py`，再用 `client.py` 调用
+- [ ] （可选）可视化 Demo：`cd demo && .venv/bin/python app.py` → http://127.0.0.1:7860  

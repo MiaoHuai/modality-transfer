@@ -9,3 +9,9 @@
 # macOS AppleDouble / resource forks
 **/._*
 ._*
+
+# demo local venv
+demo/.venv/
+
+demo/uploads/
+demo/results/

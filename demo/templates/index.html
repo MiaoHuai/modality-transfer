@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>模态迁移可视化 Demo</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="brand">
+        <span class="logo">MT</span>
+        <div>
+          <h1>模态迁移可视化 Demo</h1>
+          <p class="subtitle">pix2pix · 光学 ↔ SAR（WHU-City）· 光学 ↔ 红外（VEDAI）</p>
+        </div>
+      </div>
+      <div class="mode-badge {% if any_live %}live{% else %}showcase{% endif %}" id="modeBadge">
+        {{ mode_label }}
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>选择迁移方向</h2>
+      <p class="hint">点击下方卡片切换方向。无权重时为<strong>展示模式</strong>（样例图库对照）；检测到 <code>checkpoints/&lt;实验名&gt;/latest_net_G.pth</code> 后自动启用<strong>在线推理</strong>。</p>
+      <div class="dir-grid" id="dirGrid">
+        {% for d in directions %}
+        <button type="button"
+                class="dir-card {% if live_status[d.id].live %}is-live{% endif %}"
+                data-direction="{{ d.id }}"
+                aria-pressed="false">
+          <span class="dir-short">{{ d.short }}</span>
+          <span class="dir-label">{{ d.label }}</span>
+          <span class="dir-desc">{{ d.desc }}</span>
+          <span class="dir-meta">
+            <span class="chip">{{ d.dataset }}</span>
+            {% if live_status[d.id].live %}
+            <span class="chip chip-ok">权重已就绪</span>
+            {% elif d.showcase %}
+            <span class="chip chip-muted">展示样例</span>
+            {% else %}
+            <span class="chip chip-warn">无样例 / 无权重</span>
+            {% endif %}
+          </span>
+        </button>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="card" id="uploadSection">
+      <h2>上传图像（在线推理）</h2>
+      <p class="hint" id="uploadHint">当前方向未检测到权重时，上传将提示错误；请先浏览下方展示样例。</p>
+      <form id="inferForm" class="upload-form">
+        <label class="dropzone" id="dropzone" for="imageInput">
+          <input type="file" id="imageInput" name="image" accept="image/*" hidden />
+          <div class="dz-inner">
+            <strong>点击或拖拽上传</strong>
+            <span>支持 PNG / JPG / BMP / TIFF / WEBP</span>
+            <span id="fileName" class="file-name"></span>
+          </div>
+        </label>
+        <button type="submit" class="btn primary" id="inferBtn" disabled>运行推理</button>
+      </form>
+      <div id="inferMsg" class="msg" hidden></div>
+    </section>
+
+    <section class="card">
+      <div class="section-head">
+        <h2>对比查看</h2>
+        <p class="note" id="sampleNote">请先选择迁移方向</p>
+      </div>
+      <div class="compare-wrap" id="compareWrap" hidden>
+        <div class="compare" id="compare">
+          <img id="afterImg" alt="输出" />
+          <div class="compare-before" id="beforePane">
+            <img id="beforeImg" alt="输入" />
+          </div>
+          <div class="compare-slider" id="sliderHandle" role="slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" tabindex="0">
+            <span class="slider-line"></span>
+            <span class="slider-knob">⟷</span>
+          </div>
+          <span class="tag tag-before" id="tagBefore">输入</span>
+          <span class="tag tag-after" id="tagAfter">输出</span>
+        </div>
+        <p class="caption" id="compareCaption"></p>
+      </div>
+      <div class="empty" id="emptyState">选择方向后将显示样例或推理结果</div>
+    </section>
+
+    <section class="card">
+      <h2>样例图库</h2>
+      <div class="gallery" id="gallery"></div>
+      <div class="empty" id="galleryEmpty" hidden>该方向暂无仓库样例</div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Modality Transfer · MiaoHuai/test · 权重文件未包含在仓库中</p>
+  </footer>
+
+  <script>
+    window.DEMO_BOOT = {
+      anyLive: {{ 'true' if any_live else 'false' }},
+      liveStatus: {{ live_status | tojson }}
+    };
+  </script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
